@@ -26,6 +26,8 @@ export class CronResource {
     return this.client.request("GET", `/api/v1/cron/jobs/${id}`);
   }
 
+  /** PUT semantics: this replaces the whole job, not a partial patch —
+   * pass every field create() requires, not just the one changing. */
   update(id: string, fields: CronJob): Promise<CronJob> {
     return this.client.request("PUT", `/api/v1/cron/jobs/${id}`, { json: fields });
   }
@@ -71,6 +73,8 @@ export class UpTimeResource {
     return this.client.request("GET", `/api/v1/uptime/monitors/${id}`);
   }
 
+  /** PUT semantics, same deal as CronResource.update: whole-resource
+   * replace, not a partial patch. */
   update(id: string, fields: UpTimeMonitor): Promise<UpTimeMonitor> {
     return this.client.request("PUT", `/api/v1/uptime/monitors/${id}`, { json: fields });
   }

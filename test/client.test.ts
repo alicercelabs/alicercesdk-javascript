@@ -67,9 +67,8 @@ test("falsy query params are dropped, not sent as literal values", async () => {
   srv.route("GET /api/v1/cep/01310100", envelope({}));
 
   const client = new AlicerceLabs({ apiKey: "tok", apiBase: srv.url });
-  await client.cep.get("01310100"); // ddd/rota both undefined -> dropped
+  await client.cep.get("01310100"); // ddd left undefined -> dropped, not sent as "ddd=undefined"
 
   assert.ok(!srv.lastRequest?.path.includes("ddd"));
-  assert.ok(!srv.lastRequest?.path.includes("rota"));
   await srv.close();
 });

@@ -1,8 +1,11 @@
 # alicercelabs (JavaScript/TypeScript)
 
-SDK oficial em TypeScript para a [AlicerceLabs](https://alicercelabs.com.br) — infra básica de API pra quem constrói no Brasil (IP, CEP, DNS, email, filas, banco de dados edge, execução de WASM e mais, todas atrás de uma autenticação e um formato de resposta só).
+[![CI](https://github.com/alicercelabs/alicercesdk-javascript/actions/workflows/ci.yml/badge.svg)](https://github.com/alicercelabs/alicercesdk-javascript/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/alicercelabs/alicercesdk-javascript/main/.github/badges/coverage.json)](https://github.com/alicercelabs/alicercesdk-javascript/actions/workflows/ci.yml)
 
-Zero dependências de runtime — usa o `fetch` nativo do Node 18+ (ou do navegador).
+SDK oficial em TypeScript para a [AlicerceLabs](https://alicercelabs.com.br): IP, CEP, DNS, email, filas, banco de dados edge, execução de WASM e o resto das 16 APIs, todas atrás da mesma autenticação e do mesmo formato de resposta.
+
+Zero dependências de runtime. Usa o `fetch` nativo do Node 18+ (ou do navegador).
 
 ```bash
 npm install github:alicercelabs/alicercesdk-javascript
@@ -19,7 +22,7 @@ const endereco = await client.cep.get("01310100");
 console.log(endereco.logradouro); // "Avenida Paulista"
 ```
 
-Ainda não tem uma chave? `register`/`login` guardam o token no client sozinhos:
+Sem chave ainda? `register`/`login` guardam o token no client sozinhos:
 
 ```ts
 const client = new AlicerceLabs();
@@ -52,7 +55,7 @@ Uma propriedade por API, todas no mesmo client:
 | `client.auth` | Registro, login, perfil |
 | `client.account` | Suas próprias API keys e analytics de uso |
 
-Documentação completa de cada API, com todos os parâmetros: [alicercelabs.com.br](https://alicercelabs.com.br).
+Cada parâmetro e cada campo de resposta está documentado em [alicercelabs.com.br](https://alicercelabs.com.br).
 
 ## Exemplos
 
@@ -72,7 +75,7 @@ for (const linha of uso) {
 
 ```ts
 const nova = await client.account.apiKeys.create("ci-pipeline");
-console.log(nova.key); // só aparece aqui — salve agora
+console.log(nova.key); // só aparece aqui, salve agora
 
 const keys = await client.account.apiKeys.list();
 keys.forEach((k) => console.log(k.name, k.active));
@@ -93,7 +96,7 @@ const resultado = await client.edgedb.query("meubanco", "SELECT * FROM t");
 console.log(resultado.rows);
 ```
 
-**Endpoints que devolvem arquivo** (QRCode, Imagem, Templating, Functions `invoke`) devolvem um `BinaryResponse`:
+**Endpoints que devolvem arquivo** (QRCode, Imagem, Templating, Functions `invoke`) devolvem um `BinaryResponse`, não o envelope JSON de sempre:
 
 ```ts
 const qr = await client.qrcode.generate("https://alicercelabs.com.br", 512);
@@ -107,7 +110,7 @@ const fatura = await client.templating.invoice({
 await fatura.save("fatura.pdf");
 ```
 
-**Functions** (WASM, qualquer linguagem que compile pra WASI — incluindo Go puro):
+**Functions** (WASM, qualquer linguagem que compile pra WASI, incluindo Go puro):
 
 ```ts
 import { readFile } from "node:fs/promises";
@@ -121,7 +124,7 @@ console.log(Buffer.from(resposta.content).toString());
 
 ## Erros
 
-Toda chamada com falha lança uma exceção tipada por status HTTP — todas herdam de `AlicerceLabsError`:
+Toda chamada com falha lança uma exceção tipada por status HTTP. Todas herdam de `AlicerceLabsError`:
 
 ```ts
 import { AlicerceLabsError, NotFoundError, RateLimitError } from "alicercelabs";
@@ -154,18 +157,35 @@ try {
 const client = new AlicerceLabs({
   apiKey: "alk_...",
   apiBase: "https://api.alicercelabs.com.br",      // padrão
-  accountBase: "https://app.alicercelabs.com.br",  // padrão — usado só por client.account.*
+  accountBase: "https://app.alicercelabs.com.br",  // padrão, usado só por client.account.*
   timeoutMs: 30000,
 });
 ```
+
+`accountBase` existe separado de `apiBase` porque API keys e analytics de uso vivem no backend do painel, não no host das APIs de produto. Você não precisa pensar nisso no dia a dia, o SDK já manda cada chamada pro host certo.
 
 ## Desenvolvimento
 
 ```bash
 npm install
-npm run build   # compila src/ -> dist/ (CommonJS + .d.ts)
-npm test        # roda os testes com o test runner nativo do Node
+npm run build            # compila src/ -> dist/ (CommonJS + .d.ts)
+npm test                 # roda os testes com o test runner nativo do Node
+npm run test:coverage    # idem, com relatório de cobertura (~99% de linhas)
 ```
+
+Os testes sobem um servidor HTTP real (`node:http`, não um mock de `fetch`) e batem nele, um teste por método de API. É o mesmo servidor de teste que a suíte usa pra validar autenticação, encoding de query params e mapeamento de erro.
+
+### Testes de integração
+
+`test/integration/full.test.ts` bate numa instância real da AlicerceLabs (produção por padrão), usando a mesma API pública que qualquer chamador usaria. Ele registra uma conta descartável de verdade, cria e apaga recursos de verdade (chaves KV, uma fila, um Edge DB, um job de cron, um monitor de uptime, uma função, uma API key) e no fim apaga a própria conta. Por isso é opt-in:
+
+```bash
+ALICERCELABS_INTEGRATION=1 npm run test:integration
+```
+
+`ALICERCELABS_API_BASE`/`ALICERCELABS_ACCOUNT_BASE` apontam pra uma instância self-hosted em vez de produção, se for o caso. No CI, esse workflow (`integration.yml`) só roda manualmente (`workflow_dispatch`), nunca em todo push.
+
+Não testado de propósito: `cron.workerStart`/`workerStop` e `uptime.workerStart`/`workerStop`. Esses controlam um daemon compartilhado por toda a instância, não algo isolado à conta de teste, então pará-lo aqui afetaria usuários de verdade. `workerStatus` (só leitura) é testado no lugar deles.
 
 ## Licença
 

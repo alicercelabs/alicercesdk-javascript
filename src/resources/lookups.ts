@@ -34,12 +34,18 @@ export class IPResource {
   }
 }
 
+/** Municipio (not "cidade") is the field name the API itself uses — the
+ * query param on search()/neighborhoods() is called cidade, but the
+ * response field isn't. */
 export interface CEPResult {
   cep: string;
   logradouro: string;
+  complemento?: string;
   bairro: string;
-  cidade: string;
+  municipio: string;
+  municipio_cod_ibge?: number;
   uf: string;
+  nome?: string;
   ddd?: string;
 }
 
@@ -48,11 +54,19 @@ export interface CEPDistance {
   duration_min?: number;
 }
 
+export interface CEPBulkResult {
+  cep: string;
+  endereco?: CEPResult;
+  erro?: string;
+}
+
 export class CEPResource {
   constructor(private client: BaseClient) {}
 
-  /** Looks up an address by CEP (Brazilian postal code). */
-  get(cep: string, options: { ddd?: boolean; rota?: boolean } = {}): Promise<CEPResult> {
+  /** Looks up an address by CEP (Brazilian postal code). `rota` isn't a
+   * valid option here — that query param only does anything on
+   * distance(); GET /cep/{cep} ignores it. */
+  get(cep: string, options: { ddd?: boolean } = {}): Promise<CEPResult> {
     return this.client.request("GET", `/api/v1/cep/${cep}`, { query: options });
   }
 
@@ -80,7 +94,7 @@ export class CEPResource {
 
   /** Looks up several CEPs in one call. Costs one rate-limit unit per CEP
    * requested, not one per call — see the CEP docs page. */
-  bulk(ceps: string[]): Promise<Record<string, unknown>> {
+  bulk(ceps: string[]): Promise<CEPBulkResult[]> {
     return this.client.request("POST", "/api/v1/cep/lote", { json: { ceps } });
   }
 }

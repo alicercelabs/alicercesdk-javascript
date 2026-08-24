@@ -1,0 +1,42 @@
+{
+  "name": "alicercelabs",
+  "version": "0.1.0",
+  "description": "Official JavaScript/TypeScript SDK for AlicerceLabs (https://alicercelabs.com.br)",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --import tsx --test test/**/*.test.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "alicercelabs",
+    "api",
+    "sdk",
+    "brasil",
+    "cep",
+    "cnpj"
+  ],
+  "author": "AlicerceLabs",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alicercelabs/alicercesdk-javascript"
+  },
+  "homepage": "https://alicercelabs.com.br",
+  "bugs": {
+    "url": "https://github.com/alicercelabs/alicercesdk-javascript/issues"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "tsx": "^4.15.0",
+    "@types/node": "^20.14.0"
+  }
+}

@@ -235,6 +235,10 @@ test("integration: full API surface against a real instance", { skip: !RUN }, as
   await t.test("qrcode", async () => {
     const result = await client.qrcode.generate("https://alicercelabs.com.br", 256);
     assert.ok(result.content.length > 0);
+
+    const pix = await client.qrcode.pix({ chave: "11999999999", nome: "Fulano", cidade: "Sao Paulo", valor: 10.5 });
+    assert.ok(pix.content.length > 0);
+    assert.ok(pix.headers.get("x-pix-copia-cola")?.includes("br.gov.bcb.pix"));
   });
 
   await t.test("imagem", async () => {

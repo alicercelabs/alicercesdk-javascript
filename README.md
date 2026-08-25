@@ -102,6 +102,10 @@ console.log(resultado.rows);
 const qr = await client.qrcode.generate("https://alicercelabs.com.br", 512);
 await qr.save("qrcode.png"); // Node.js
 
+const pix = await client.qrcode.pix({ chave: "11999999999", nome: "Fulano de Tal", cidade: "Sao Paulo", valor: 10.5 });
+await pix.save("pix.png");
+console.log(pix.headers.get("x-pix-copia-cola")); // o mesmo payload em texto, pro "copia e cola"
+
 const fatura = await client.templating.invoice({
   issuer: { name: "Minha Empresa" },
   recipient: { name: "Cliente Exemplo" },

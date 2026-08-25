@@ -8,12 +8,48 @@
 import type { BaseClient } from "../client";
 import { BinaryResponse } from "../client";
 
+/** Pix's input for `qrcode.pix()`. `chave`/`nome`/`cidade` are required;
+ * the rest are optional. `nome`/`cidade` get uppercased and stripped of
+ * accents server-side, same as a card terminal, send them however you
+ * like. */
+export interface PixParams {
+  /** The recipient's Pix key: CPF, CNPJ, email, phone or random key. */
+  chave: string;
+  /** The recipient's name, up to 25 characters. */
+  nome: string;
+  /** The recipient's city, up to 15 characters. */
+  cidade: string;
+  /** The charge amount in reais (e.g. 10.50). Omit it and the payer
+   * types in the amount themselves. */
+  valor?: number;
+  /** Identifies the transaction, letters and digits only, up to 25
+   * characters. Omit it and it defaults to `***` (the standard's own
+   * "no identifier" convention). */
+  txid?: string;
+  /** Free text embedded in the payload, up to 72 characters. */
+  descricao?: string;
+  /** Image side in pixels, 64-1024. Omit it for the API's default. */
+  size?: number;
+}
+
 export class QRCodeResource {
   constructor(private client: BaseClient) {}
 
   /** Generates a QR code PNG for arbitrary text or a URL. */
   generate(data: string, size?: number): Promise<BinaryResponse> {
     return this.client.requestRaw("GET", "/api/v1/qrcode", { query: { data, size } });
+  }
+
+  /** Generates a static Pix QR code: builds the EMV/BR Code payload from
+   * `params` and renders it, same encoder and cache as `generate()`.
+   * Doesn't validate that `chave` actually exists, that needs the
+   * Central Bank's DICT, out of scope here, only its format and length.
+   *
+   * The response's `.headers.get("X-Pix-Copia-Cola")` carries the same
+   * payload as plain text (the "copia e cola" code), for when you want
+   * to show both. */
+  pix(params: PixParams): Promise<BinaryResponse> {
+    return this.client.requestRaw("GET", "/api/v1/qrcode/pix", { query: { ...params } });
   }
 }
 

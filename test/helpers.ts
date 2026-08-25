@@ -12,6 +12,7 @@ export interface RouteHandler {
   body: string | Buffer;
   contentType?: string;
   retryAfter?: number;
+  headers?: Record<string, string>;
 }
 
 export class TestServer {
@@ -58,7 +59,7 @@ export class TestServer {
         res.end(JSON.stringify({ success: false, error: "not found" }));
         return;
       }
-      const headers: Record<string, string> = { "Content-Type": handler.contentType ?? "application/json" };
+      const headers: Record<string, string> = { "Content-Type": handler.contentType ?? "application/json", ...handler.headers };
       if (handler.retryAfter) headers["Retry-After"] = String(handler.retryAfter);
       res.writeHead(handler.status, headers);
       res.end(handler.body);

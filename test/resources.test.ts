@@ -453,6 +453,25 @@ test("qrcode.generate returns BinaryResponse", async () => {
   await srv.close();
 });
 
+test("qrcode.pix returns BinaryResponse with the copia-e-cola header", async () => {
+  const srv = await TestServer.start();
+  srv.route("GET /api/v1/qrcode/pix", {
+    status: 200,
+    body: Buffer.from("\x89PNGfakepixbytes"),
+    contentType: "image/png",
+    headers: { "X-Pix-Copia-Cola": "00020101021126330014br.gov.bcb.pix...6304ABCD" },
+  });
+
+  const result = await clientFor(srv).qrcode.pix({ chave: "11999999999", nome: "Fulano", cidade: "Sao Paulo", valor: 10.5 });
+  assert.equal(Buffer.from(result.content).toString(), "\x89PNGfakepixbytes");
+  assert.equal(result.contentType, "image/png");
+  // Headers is case-insensitive by spec, read it back differently-cased on purpose
+  assert.equal(result.headers.get("x-pix-copia-cola"), "00020101021126330014br.gov.bcb.pix...6304ABCD");
+  assert.ok(srv.lastRequest?.path.includes("chave=11999999999"));
+  assert.ok(srv.lastRequest?.path.includes("valor=10.5"));
+  await srv.close();
+});
+
 test("imagem.transform returns BinaryResponse", async () => {
   const srv = await TestServer.start();
   srv.route("POST /api/v1/imagem/transform", { status: 200, body: Buffer.from("fakejpegbytes"), contentType: "image/jpeg" });

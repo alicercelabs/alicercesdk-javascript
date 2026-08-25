@@ -20,19 +20,47 @@ function clientFor(srv: TestServer): AlicerceLabs {
 
 test("ip.lookup", async () => {
   const srv = await TestServer.start();
-  srv.route("GET /api/v1/ip/8.8.8.8", envelope({ ip: "8.8.8.8", country: "US" }));
+  srv.route(
+    "GET /api/v1/ip/8.8.8.8",
+    envelope({
+      ip: "8.8.8.8",
+      version: 4,
+      scope: "public",
+      routable: true,
+      location: { country: { code: "US", name: "United States", is_eu: false } },
+    }),
+  );
 
   const result = await clientFor(srv).ip.lookup("8.8.8.8");
-  assert.equal(result.country, "US");
+  assert.equal(result.location?.country?.code, "US");
   await srv.close();
 });
 
 test("ip.self", async () => {
   const srv = await TestServer.start();
-  srv.route("GET /api/v1/ip/self", envelope({ ip: "203.0.113.9", country: "BR" }));
+  srv.route("GET /api/v1/ip/self", envelope({ ip: "203.0.113.9", version: 4, scope: "public", routable: true }));
 
   const result = await clientFor(srv).ip.self();
   assert.equal(result.ip, "203.0.113.9");
+  await srv.close();
+});
+
+test("ip.batch", async () => {
+  const srv = await TestServer.start();
+  srv.route(
+    "POST /api/v1/ip/batch",
+    envelope({
+      results: [
+        { ip: "8.8.8.8", success: true, data: { ip: "8.8.8.8", version: 4, scope: "public", routable: true } },
+        { ip: "not-an-ip", success: false, error: { code: "INVALID_IP", message: "invalid IP address format" } },
+      ],
+    }),
+  );
+
+  const result = await clientFor(srv).ip.batch(["8.8.8.8", "not-an-ip"]);
+  assert.equal(result.length, 2);
+  assert.equal(result[0].success, true);
+  assert.equal(result[1].success, false);
   await srv.close();
 });
 

@@ -36,7 +36,7 @@ Uma propriedade por API, todas no mesmo client:
 
 | Propriedade | API |
 |---|---|
-| `client.ip` | Geolocalização de IP |
+| `client.ip` | IP Intelligence — geo, ASN, cloud, VPN/Tor (`lookup`/`self`/`batch`) |
 | `client.cep` | Endereço a partir do CEP |
 | `client.dns` | Consulta DNS |
 | `client.email` | Verificação de email |

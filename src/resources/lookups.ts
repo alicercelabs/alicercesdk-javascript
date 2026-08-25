@@ -6,31 +6,229 @@
 
 import type { BaseClient } from "../client";
 
+export interface IPContinent {
+  code: string;
+  name: string;
+}
+
+export interface IPCountry {
+  code: string;
+  name: string;
+  is_eu: boolean;
+}
+
+export interface IPRegion {
+  code: string;
+  name: string;
+}
+
+export interface IPLocation {
+  continent: IPContinent | null;
+  country: IPCountry | null;
+  region: IPRegion | null;
+  city: string | null;
+  postal_code: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  accuracy_radius_km: number | null;
+  geoname_id: number | null;
+  timezone: string | null;
+}
+
+export interface IPCloud {
+  provider: string;
+  service: string | null;
+  region: string | null;
+}
+
+export interface IPRPKI {
+  status: "valid" | "invalid" | "not_found" | "unknown";
+  origin_asn: number | null;
+  prefix: string | null;
+}
+
+export interface IPNetwork {
+  cidr: string | null;
+  /** A real number, never a composed "AS<n>" string. */
+  asn: number | null;
+  asn_name: string | null;
+  asn_domain: string | null;
+  organization: string | null;
+  isp: string | null;
+  rir: string | null;
+  type: "isp" | "hosting" | "business" | "education" | "government" | "banking" | "cdn" | "mobile" | "satellite" | "unknown";
+  anycast: boolean | null;
+  cloud: IPCloud | null;
+  rpki: IPRPKI | null;
+}
+
+type IPConfidenceLevel = "high" | "medium" | "low" | "unknown";
+
+export interface IPVPN {
+  detected: boolean;
+  provider: string | null;
+  confidence: IPConfidenceLevel;
+  last_seen: string | null;
+}
+
+export interface IPProxy {
+  detected: boolean;
+  type: string | null;
+  confidence: IPConfidenceLevel;
+  last_seen: string | null;
+}
+
+export interface IPTor {
+  detected: boolean;
+  exit_node: boolean | null;
+}
+
+export interface IPRelay {
+  detected: boolean;
+  provider: string | null;
+}
+
+export interface IPResidentialProxy {
+  detected: boolean;
+  provider: string | null;
+  confidence: IPConfidenceLevel;
+}
+
+/** Detected is always known (never null): "checked, not detected" is
+ * itself informative. */
+export interface IPPrivacy {
+  anonymous: boolean | null;
+  vpn: IPVPN;
+  proxy: IPProxy;
+  tor: IPTor;
+  relay: IPRelay;
+  residential_proxy: IPResidentialProxy;
+}
+
+export interface IPTraits {
+  hosting: boolean | null;
+  datacenter: boolean | null;
+  mobile: boolean | null;
+  satellite: boolean | null;
+  crawler: boolean | null;
+  /** True for non-public scopes — always known, never null. */
+  bogon: boolean;
+}
+
+export interface IPCarrier {
+  name: string;
+  mcc: string;
+  mnc: string;
+  country_code: string;
+}
+
+export interface IPCompany {
+  name: string;
+  domain: string;
+  type: string;
+}
+
+/** Deterministic and explainable — a null score/"unknown" level means
+ * insufficient evidence, never a fabricated number. */
+export interface IPRisk {
+  score: number | null;
+  level: "low" | "medium" | "high" | "critical" | "unknown";
+  model: string | null;
+  signals: string[] | null;
+}
+
+export interface IPConfidenceSummary {
+  country: IPConfidenceLevel;
+  region: IPConfidenceLevel;
+  city: IPConfidenceLevel;
+  network: IPConfidenceLevel;
+  privacy: IPConfidenceLevel;
+}
+
+export interface IPMeta {
+  updated_at: string;
+  confidence: IPConfidenceSummary;
+  /** Only present with includeSourceDetails. */
+  sources?: Record<string, string[]>;
+}
+
 export interface IPResult {
   ip: string;
-  country: string;
-  country_code: string;
-  region: string;
-  city: string;
-  lat: number;
-  lon: number;
-  timezone: string;
-  isp: string;
-  org: string;
-  asn: string;
+  /** 4 or 6. */
+  version: number;
+  scope: "public" | "private" | "loopback" | "link_local" | "multicast" | "unspecified" | "documentation" | "benchmark" | "reserved" | "carrier_grade_nat";
+  routable: boolean;
+  /** Reverse DNS — null unless includeSourceDetails/hostname was requested. */
+  hostname: string | null;
+
+  /** Null for non-routable scopes, or if no geo source had data. */
+  location: IPLocation | null;
+  network: IPNetwork | null;
+  privacy: IPPrivacy;
+  traits: IPTraits;
+  carrier: IPCarrier | null;
+  company: IPCompany | null;
+  risk: IPRisk;
+
+  meta: IPMeta;
+}
+
+export interface IPLookupOptions {
+  /** Restricts the response to these dot-notation paths (e.g.
+   * `["location.country", "network.asn"]`) — `ip` is always kept. */
+  fields?: string[];
+  /** Adds `meta.sources` (which provider/dataset answered each category). */
+  includeSourceDetails?: boolean;
+  /** Language for geographic names only (continent/country/region/city) —
+   * e.g. `"pt-BR"`. Omitted uses the API default (en). */
+  lang?: string;
+}
+
+export interface IPBatchError {
+  code: string;
+  message: string;
+}
+
+export interface IPBatchItem {
+  ip: string;
+  success: boolean;
+  data?: IPResult;
+  error?: IPBatchError;
+}
+
+function ipQuery(options: IPLookupOptions) {
+  return {
+    fields: options.fields?.length ? options.fields.join(",") : undefined,
+    include: options.includeSourceDetails ? "source_details" : undefined,
+    lang: options.lang,
+  };
 }
 
 export class IPResource {
   constructor(private client: BaseClient) {}
 
-  /** Geolocates a specific public IPv4/IPv6 address. */
-  lookup(ip: string): Promise<IPResult> {
-    return this.client.request("GET", `/api/v1/ip/${ip}`);
+  /** Resolves a specific public IPv4/IPv6 address. A private/reserved
+   * address isn't an error — it comes back as a partial profile
+   * (`scope`/`routable` set, the rest null). */
+  lookup(ip: string, options: IPLookupOptions = {}): Promise<IPResult> {
+    return this.client.request("GET", `/api/v1/ip/${ip}`, { query: ipQuery(options) });
   }
 
-  /** Geolocates the caller — the IP the request itself came from. */
-  self(): Promise<IPResult> {
-    return this.client.request("GET", "/api/v1/ip/self");
+  /** Resolves the caller — the IP the request itself came from. */
+  self(options: IPLookupOptions = {}): Promise<IPResult> {
+    return this.client.request("GET", "/api/v1/ip/self", { query: ipQuery(options) });
+  }
+
+  /** Resolves up to 100 IPs in one call. Each address is resolved
+   * independently — one malformed entry never fails the whole batch, it
+   * just gets `success: false` in its own slot. */
+  async batch(ips: string[], options: IPLookupOptions = {}): Promise<IPBatchItem[]> {
+    const { results } = await this.client.request<{ results: IPBatchItem[] }>(
+      "POST",
+      "/api/v1/ip/batch",
+      { json: { ips }, query: ipQuery(options) },
+    );
+    return results;
   }
 }
 

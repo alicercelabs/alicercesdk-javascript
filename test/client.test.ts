@@ -7,12 +7,12 @@ import { TestServer, envelope, errorEnvelope } from "./helpers";
 
 test("successful call unwraps data", async () => {
   const srv = await TestServer.start();
-  srv.route("GET /api/v1/ip/8.8.8.8", envelope({ ip: "8.8.8.8", country: "US" }));
+  srv.route("GET /api/v1/ip/8.8.8.8", envelope({ ip: "8.8.8.8", version: 4, scope: "public", routable: true }));
 
   const client = new AlicerceLabs({ apiKey: "tok", apiBase: srv.url });
   const result = await client.ip.lookup("8.8.8.8");
 
-  assert.deepEqual(result, { ip: "8.8.8.8", country: "US" });
+  assert.deepEqual(result, { ip: "8.8.8.8", version: 4, scope: "public", routable: true });
   await srv.close();
 });
 

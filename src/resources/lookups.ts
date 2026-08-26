@@ -128,15 +128,6 @@ export interface IPCompany {
   type: string;
 }
 
-/** Deterministic and explainable — a null score/"unknown" level means
- * insufficient evidence, never a fabricated number. */
-export interface IPRisk {
-  score: number | null;
-  level: "low" | "medium" | "high" | "critical" | "unknown";
-  model: string | null;
-  signals: string[] | null;
-}
-
 export interface IPConfidenceSummary {
   country: IPConfidenceLevel;
   region: IPConfidenceLevel;
@@ -168,7 +159,6 @@ export interface IPResult {
   traits: IPTraits;
   carrier: IPCarrier | null;
   company: IPCompany | null;
-  risk: IPRisk;
 
   meta: IPMeta;
 }

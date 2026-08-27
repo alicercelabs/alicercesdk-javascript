@@ -21,7 +21,7 @@
  */
 
 import { BaseClient, ClientOptions, BinaryResponse } from "./client";
-import { IPResource, CEPResource, DNSResource, EmailResource, SSLResource, MapsResource, TrustResource } from "./resources/lookups";
+import { IPResource, CEPResource, CNPJResource, DNSResource, EmailResource, SSLResource, MapsResource, TrustResource } from "./resources/lookups";
 import { KVResource, QueueResource, EdgeDBResource } from "./resources/storage";
 import { CronResource, UpTimeResource } from "./resources/jobs";
 import { QRCodeResource, ImagemResource, TemplatingResource } from "./resources/media";
@@ -43,6 +43,7 @@ export class AlicerceLabs {
 
   readonly ip: IPResource;
   readonly cep: CEPResource;
+  readonly cnpj: CNPJResource;
   readonly dns: DNSResource;
   readonly email: EmailResource;
   readonly ssl: SSLResource;
@@ -70,6 +71,7 @@ export class AlicerceLabs {
 
     this.ip = new IPResource(this.client);
     this.cep = new CEPResource(this.client);
+    this.cnpj = new CNPJResource(this.client);
     this.dns = new DNSResource(this.client);
     this.email = new EmailResource(this.client);
     this.ssl = new SSLResource(this.client);

@@ -64,6 +64,20 @@ test("ip.batch", async () => {
   await srv.close();
 });
 
+// ---- cnpj ----
+
+test("cnpj.get", async () => {
+  const srv = await TestServer.start();
+  srv.route(
+    "GET /api/v1/cnpj/33683111000280",
+    envelope({ cnpj: "33683111000280", razao_social: "SERVICO FEDERAL DE PROCESSAMENTO DE DADOS (SERPRO)" }),
+  );
+
+  const result = await clientFor(srv).cnpj.get("33683111000280");
+  assert.equal(result.razao_social, "SERVICO FEDERAL DE PROCESSAMENTO DE DADOS (SERPRO)");
+  await srv.close();
+});
+
 // ---- cep ----
 
 test("cep.get", async () => {

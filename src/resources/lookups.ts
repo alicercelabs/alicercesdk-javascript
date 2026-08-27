@@ -207,6 +207,72 @@ export class IPResource {
   }
 }
 
+export interface CNPJCNAE {
+  codigo: number;
+  descricao: string;
+}
+
+export interface CNPJEndereco {
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cep?: string;
+  municipio?: string;
+  codigo_municipio_ibge?: number;
+  uf?: string;
+}
+
+/** cpf_cnpj_mascarado already comes masked from the API (***XXXXXX**),
+ * never plaintext. */
+export interface CNPJSocio {
+  nome: string;
+  qualificacao: string;
+  data_entrada?: string;
+  cpf_cnpj_mascarado?: string;
+  faixa_etaria?: string;
+}
+
+/** Field names match the API's own (Portuguese, same layout the Federal
+ * Revenue itself uses), not a translated set. `meta.fonte` says which
+ * source answered ("local" or "brasilapi") — see the CNPJ API docs for
+ * why there are two. */
+export interface CNPJResult {
+  cnpj: string;
+  matriz: boolean;
+  razao_social: string;
+  nome_fantasia?: string;
+  situacao_cadastral: number;
+  descricao_situacao_cadastral: string;
+  data_situacao_cadastral?: string;
+  motivo_situacao_cadastral?: number;
+  descricao_motivo_situacao_cadastral?: string;
+  data_inicio_atividade?: string;
+  natureza_juridica?: string;
+  codigo_natureza_juridica?: number;
+  porte?: string;
+  capital_social: number;
+  cnae_fiscal: CNPJCNAE;
+  cnaes_secundarios?: CNPJCNAE[];
+  endereco: CNPJEndereco;
+  telefone?: string;
+  email?: string;
+  opcao_pelo_simples: boolean | null;
+  opcao_pelo_mei: boolean | null;
+  qsa?: CNPJSocio[];
+  meta: { fonte: "local" | "brasilapi" };
+}
+
+export class CNPJResource {
+  constructor(private client: BaseClient) {}
+
+  /** Looks up a company by CNPJ, with or without punctuation
+   * ("33683111000280" or "33.683.111/0002-80"). */
+  get(cnpj: string): Promise<CNPJResult> {
+    return this.client.request("GET", `/api/v1/cnpj/${cnpj}`);
+  }
+}
+
 /** Municipio (not "cidade") is the field name the API itself uses — the
  * query param on search()/neighborhoods() is called cidade, but the
  * response field isn't. */

@@ -44,6 +44,13 @@ Uma propriedade por API, todas no mesmo client:
 | `client.diasUteis` | Contagem de dias úteis num intervalo |
 | `client.isbn` | Metadados de livro por ISBN |
 | `client.ibge` | Regiões, estados, municípios e classes CNAE |
+| `client.bancos` | Lista de bancos (participantes do STR) |
+| `client.ncm` | Nomenclatura Comum do Mercosul |
+| `client.oms` | CID-10 |
+| `client.cambio` | Cotação de câmbio (PTAX) |
+| `client.taxas` | Taxas e índices oficiais (Selic, CDI, IPCA, IGP-M) |
+| `client.registroBR` | Disponibilidade de domínio .br |
+| `client.pix` | Participantes do PIX |
 | `client.dns` | Consulta DNS |
 | `client.email` | Verificação de email |
 | `client.ssl` | Checagem de certificado |

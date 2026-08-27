@@ -422,6 +422,182 @@ export class IBGEResource {
   }
 }
 
+export interface BancoResult {
+  ispb: string;
+  codigo?: string;
+  nome: string;
+  nome_extenso?: string;
+  participa_compe: boolean;
+  inicio_operacao?: string;
+}
+
+/** No fallback — the source is already the Central Bank's own. */
+export class BancosResource {
+  constructor(private client: BaseClient) {}
+
+  /** Looks up a bank by its numeric code (no leading zeros, e.g. "1"
+   * for Banco do Brasil). */
+  get(codigo: string): Promise<BancoResult> {
+    return this.client.request("GET", `/api/v1/bancos/${codigo}`);
+  }
+
+  /** Every STR participant. */
+  list(): Promise<BancoResult[]> {
+    return this.client.request("GET", "/api/v1/bancos");
+  }
+}
+
+export interface NCMResult {
+  codigo: string;
+  descricao: string;
+  data_inicio?: string;
+  data_fim?: string;
+  tipo_ato?: string;
+  numero_ato?: string;
+  ano_ato?: string;
+}
+
+/** No fallback — the source is already Siscomex's own. */
+export class NCMResource {
+  constructor(private client: BaseClient) {}
+
+  /** Looks up an NCM code, with or without punctuation. */
+  get(codigo: string): Promise<NCMResult> {
+    return this.client.request("GET", `/api/v1/ncm/${codigo}`);
+  }
+}
+
+export interface CID10Result {
+  codigo: string;
+  nome: string;
+}
+
+/** No fallback — the source is already DATASUS's own. */
+export class OMSResource {
+  constructor(private client: BaseClient) {}
+
+  /** Looks up an ICD-10 code — a 3-character category ("A00") or a
+   * subcategory with or without a dot ("A000" or "A00.0"). */
+  cid10(codigo: string): Promise<CID10Result> {
+    return this.client.request("GET", `/api/v1/oms/cid10/${codigo}`);
+  }
+}
+
+export interface CambioCotacao {
+  paridade_compra: number;
+  paridade_venda: number;
+  cotacao_compra: number;
+  cotacao_venda: number;
+  data_hora_cotacao: string;
+  tipo_boletim: string;
+}
+
+/** `meta.fonte` says which source answered ("bcb" or "brasilapi"). `data`
+ * may differ from the requested date if it fell on a weekend or holiday
+ * — the search walks back to the last business day. */
+export interface CambioResult {
+  moeda: string;
+  data: string;
+  cotacoes: CambioCotacao[];
+  meta: { fonte: "bcb" | "brasilapi" };
+}
+
+export interface MoedaResult {
+  simbolo: string;
+  nome: string;
+  tipo_moeda: string;
+}
+
+export class CambioResource {
+  constructor(private client: BaseClient) {}
+
+  /** Looks up a currency's PTAX rate on a date (YYYY-MM-DD). */
+  get(moeda: string, data: string): Promise<CambioResult> {
+    return this.client.request("GET", `/api/v1/cambio/${moeda}/${data}`);
+  }
+
+  /** Every currency available for get(). */
+  moedas(): Promise<MoedaResult[]> {
+    return this.client.request("GET", "/api/v1/cambio/moedas");
+  }
+}
+
+export interface TaxaResult {
+  nome: string;
+  valor: number;
+  data: string;
+}
+
+export interface SerieItem {
+  data: string;
+  valor: number;
+}
+
+/** Covers both BrasilAPI's "taxas" and "índices" categories — same
+ * source, different series of the same mechanism. */
+export class TaxasResource {
+  constructor(private client: BaseClient) {}
+
+  /** An indicator's latest value ("selic", "cdi", "ipca" or "igpm"). */
+  get(nome: string): Promise<TaxaResult> {
+    return this.client.request("GET", `/api/v1/taxas/${nome}`);
+  }
+
+  /** The latest value of every known indicator. */
+  list(): Promise<TaxaResult[]> {
+    return this.client.request("GET", "/api/v1/taxas");
+  }
+
+  /** An indicator's historical series between dataInicial and dataFinal
+   * (both YYYY-MM-DD, inclusive). */
+  serie(nome: string, dataInicial: string, dataFinal: string): Promise<SerieItem[]> {
+    return this.client.request("GET", `/api/v1/taxas/${nome}/serie`, {
+      query: { inicio: dataInicial, fim: dataFinal },
+    });
+  }
+}
+
+/** `meta.fonte` says which source answered ("registro.br" or "brasilapi"). */
+export interface RegistroBRResult {
+  dominio: string;
+  disponivel: boolean;
+  status?: string[];
+  registrado_em?: string;
+  expira_em?: string;
+  nameservers?: string[];
+  meta: { fonte: "registro.br" | "brasilapi" };
+}
+
+export class RegistroBRResource {
+  constructor(private client: BaseClient) {}
+
+  /** Evaluates whether a .br domain is available or already registered. */
+  get(dominio: string): Promise<RegistroBRResult> {
+    return this.client.request("GET", `/api/v1/registrobr/${dominio}`);
+  }
+}
+
+export interface ParticipanteResult {
+  ispb: string;
+  nome: string;
+  nome_reduzido: string;
+  modalidade_participacao: string;
+  tipo_participacao: string;
+  inicio_operacao?: string;
+}
+
+/** No official structured source exists yet (the Central Bank only
+ * publishes this list as a PDF) — this proxies BrasilAPI directly, no
+ * fallback chain. */
+export class PIXResource {
+  constructor(private client: BaseClient) {}
+
+  /** Every institution participating in PIX. */
+  participantes(): Promise<ParticipanteResult[]> {
+    return this.client.request("GET", "/api/v1/pix/participantes");
+  }
+}
+
 /** Municipio (not "cidade") is the field name the API itself uses — the
  * query param on search()/neighborhoods() is called cidade, but the
  * response field isn't. */

@@ -11,6 +11,8 @@
  * Every product API is available as a property on the client —
  * `client.ip`, `client.cep`, `client.cnpj`, `client.cpf`,
  * `client.feriados`, `client.diasUteis`, `client.isbn`, `client.ibge`,
+ * `client.bancos`, `client.ncm`, `client.oms`, `client.cambio`,
+ * `client.taxas`, `client.registroBR`, `client.pix`,
  * `client.dns`, `client.email`, `client.cron`, `client.qrcode`,
  * `client.ssl`, `client.kv`, `client.uptime`, `client.imagem`,
  * `client.maps`, `client.queue`, `client.templating`, `client.edgedb`,
@@ -23,7 +25,7 @@
  */
 
 import { BaseClient, ClientOptions, BinaryResponse } from "./client";
-import { IPResource, CEPResource, CNPJResource, CPFResource, FeriadosResource, DiasUteisResource, ISBNResource, IBGEResource, DNSResource, EmailResource, SSLResource, MapsResource, TrustResource } from "./resources/lookups";
+import { IPResource, CEPResource, CNPJResource, CPFResource, FeriadosResource, DiasUteisResource, ISBNResource, IBGEResource, BancosResource, NCMResource, OMSResource, CambioResource, TaxasResource, RegistroBRResource, PIXResource, DNSResource, EmailResource, SSLResource, MapsResource, TrustResource } from "./resources/lookups";
 import { KVResource, QueueResource, EdgeDBResource } from "./resources/storage";
 import { CronResource, UpTimeResource } from "./resources/jobs";
 import { QRCodeResource, ImagemResource, TemplatingResource } from "./resources/media";
@@ -51,6 +53,13 @@ export class AlicerceLabs {
   readonly diasUteis: DiasUteisResource;
   readonly isbn: ISBNResource;
   readonly ibge: IBGEResource;
+  readonly bancos: BancosResource;
+  readonly ncm: NCMResource;
+  readonly oms: OMSResource;
+  readonly cambio: CambioResource;
+  readonly taxas: TaxasResource;
+  readonly registroBR: RegistroBRResource;
+  readonly pix: PIXResource;
   readonly dns: DNSResource;
   readonly email: EmailResource;
   readonly ssl: SSLResource;
@@ -84,6 +93,13 @@ export class AlicerceLabs {
     this.diasUteis = new DiasUteisResource(this.client);
     this.isbn = new ISBNResource(this.client);
     this.ibge = new IBGEResource(this.client);
+    this.bancos = new BancosResource(this.client);
+    this.ncm = new NCMResource(this.client);
+    this.oms = new OMSResource(this.client);
+    this.cambio = new CambioResource(this.client);
+    this.taxas = new TaxasResource(this.client);
+    this.registroBR = new RegistroBRResource(this.client);
+    this.pix = new PIXResource(this.client);
     this.dns = new DNSResource(this.client);
     this.email = new EmailResource(this.client);
     this.ssl = new SSLResource(this.client);

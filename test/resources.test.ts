@@ -155,6 +155,101 @@ test("ibge.municipios", async () => {
   await srv.close();
 });
 
+// ---- bancos ----
+
+test("bancos.get", async () => {
+  const srv = await TestServer.start();
+  srv.route("GET /api/v1/bancos/1", envelope({ ispb: "00000000", codigo: "1", nome: "BCO DO BRASIL S.A.", participa_compe: true }));
+
+  const result = await clientFor(srv).bancos.get("1");
+  assert.equal(result.nome, "BCO DO BRASIL S.A.");
+  await srv.close();
+});
+
+// ---- ncm ----
+
+test("ncm.get", async () => {
+  const srv = await TestServer.start();
+  srv.route("GET /api/v1/ncm/33051000", envelope({ codigo: "3305.10.00", descricao: "- Xampus" }));
+
+  const result = await clientFor(srv).ncm.get("33051000");
+  assert.equal(result.descricao, "- Xampus");
+  await srv.close();
+});
+
+// ---- oms ----
+
+test("oms.cid10", async () => {
+  const srv = await TestServer.start();
+  srv.route("GET /api/v1/oms/cid10/A00.0", envelope({ codigo: "A00.0", nome: "Cólera devida a Vibrio cholerae 01, biótipo cholerae" }));
+
+  const result = await clientFor(srv).oms.cid10("A00.0");
+  assert.equal(result.codigo, "A00.0");
+  await srv.close();
+});
+
+// ---- cambio ----
+
+test("cambio.get", async () => {
+  const srv = await TestServer.start();
+  srv.route("GET /api/v1/cambio/USD/2026-08-25", envelope({ moeda: "USD", data: "2026-08-25", cotacoes: [], meta: { fonte: "bcb" } }));
+
+  const result = await clientFor(srv).cambio.get("USD", "2026-08-25");
+  assert.equal(result.meta.fonte, "bcb");
+  await srv.close();
+});
+
+test("cambio.moedas", async () => {
+  const srv = await TestServer.start();
+  srv.route("GET /api/v1/cambio/moedas", envelope([{ simbolo: "USD", nome: "Dólar dos Estados Unidos", tipo_moeda: "A" }]));
+
+  const result = await clientFor(srv).cambio.moedas();
+  assert.equal(result[0].simbolo, "USD");
+  await srv.close();
+});
+
+// ---- taxas ----
+
+test("taxas.get", async () => {
+  const srv = await TestServer.start();
+  srv.route("GET /api/v1/taxas/selic", envelope({ nome: "selic", valor: 14.25, data: "2026-08-26" }));
+
+  const result = await clientFor(srv).taxas.get("selic");
+  assert.equal(result.valor, 14.25);
+  await srv.close();
+});
+
+test("taxas.serie", async () => {
+  const srv = await TestServer.start();
+  srv.route("GET /api/v1/taxas/igpm/serie", envelope([{ data: "2026-05-01", valor: 0.84 }]));
+
+  const result = await clientFor(srv).taxas.serie("igpm", "2026-05-01", "2026-06-01");
+  assert.equal(result[0].valor, 0.84);
+  await srv.close();
+});
+
+// ---- registrobr ----
+
+test("registroBR.get", async () => {
+  const srv = await TestServer.start();
+  srv.route("GET /api/v1/registrobr/brasilapi.com.br", envelope({ dominio: "brasilapi.com.br", disponivel: false, meta: { fonte: "registro.br" } }));
+
+  const result = await clientFor(srv).registroBR.get("brasilapi.com.br");
+  assert.equal(result.disponivel, false);
+  await srv.close();
+});
+
+// ---- pix ----
+
+test("pix.participantes", async () => {
+  const srv = await TestServer.start();
+  srv.route("GET /api/v1/pix/participantes", envelope([{ ispb: "00360305", nome: "CAIXA ECONOMICA FEDERAL" }]));
+
+  const result = await clientFor(srv).pix.participantes();
+  assert.equal(result[0].nome, "CAIXA ECONOMICA FEDERAL");
+  await srv.close();
+});
+
 // ---- cep ----
 
 test("cep.get", async () => {

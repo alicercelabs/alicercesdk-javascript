@@ -78,6 +78,83 @@ test("cnpj.get", async () => {
   await srv.close();
 });
 
+// ---- cpf ----
+
+test("cpf.get", async () => {
+  const srv = await TestServer.start();
+  srv.route(
+    "GET /api/v1/cpf/10723555079",
+    envelope({ cpf: "10723555079", valido: true, regiao_fiscal: 0, estados: ["RS"] }),
+  );
+
+  const result = await clientFor(srv).cpf.get("10723555079");
+  assert.equal(result.valido, true);
+  assert.deepEqual(result.estados, ["RS"]);
+  await srv.close();
+});
+
+// ---- feriados ----
+
+test("feriados.list", async () => {
+  const srv = await TestServer.start();
+  srv.route(
+    "GET /api/v1/feriados/2026",
+    envelope([{ data: "2026-01-01", nome: "Confraternização Universal", tipo: "fixo" }]),
+  );
+
+  const result = await clientFor(srv).feriados.list(2026);
+  assert.equal(result[0].data, "2026-01-01");
+  await srv.close();
+});
+
+// ---- dias uteis ----
+
+test("diasUteis.count", async () => {
+  const srv = await TestServer.start();
+  srv.route("GET /api/v1/diasuteis", envelope({ dias_uteis: ["2026-01-02", "2026-01-05"], total: 2 }));
+
+  const result = await clientFor(srv).diasUteis.count("2026-01-01", "2026-01-05");
+  assert.equal(result.total, 2);
+  await srv.close();
+});
+
+// ---- isbn ----
+
+test("isbn.get", async () => {
+  const srv = await TestServer.start();
+  srv.route(
+    "GET /api/v1/isbn/9788545702870",
+    envelope({ isbn: "9788545702870", titulo: "Akira vol. 1", meta: { fonte: "open-library" } }),
+  );
+
+  const result = await clientFor(srv).isbn.get("9788545702870");
+  assert.equal(result.titulo, "Akira vol. 1");
+  await srv.close();
+});
+
+// ---- ibge ----
+
+test("ibge.estado", async () => {
+  const srv = await TestServer.start();
+  srv.route(
+    "GET /api/v1/ibge/uf/SP",
+    envelope({ id: 35, sigla: "SP", nome: "São Paulo", regiao: { id: 3, sigla: "SE", nome: "Sudeste" } }),
+  );
+
+  const result = await clientFor(srv).ibge.estado("SP");
+  assert.equal(result.nome, "São Paulo");
+  await srv.close();
+});
+
+test("ibge.municipios", async () => {
+  const srv = await TestServer.start();
+  srv.route("GET /api/v1/ibge/municipios/SP", envelope([{ codigo_ibge: 3550308, nome: "São Paulo", uf: "SP" }]));
+
+  const result = await clientFor(srv).ibge.municipios("SP");
+  assert.equal(result[0].nome, "São Paulo");
+  await srv.close();
+});
+
 // ---- cep ----
 
 test("cep.get", async () => {

@@ -273,6 +273,155 @@ export class CNPJResource {
   }
 }
 
+export interface CPFResult {
+  cpf: string;
+  valido: boolean;
+  regiao_fiscal: number;
+  estados: string[];
+}
+
+export class CPFResource {
+  constructor(private client: BaseClient) {}
+
+  /** Validates a CPF (with or without punctuation) and resolves its
+   * issuing fiscal region. Pure calculation, no external source. */
+  get(cpf: string): Promise<CPFResult> {
+    return this.client.request("GET", `/api/v1/cpf/${cpf}`);
+  }
+}
+
+export interface Holiday {
+  data: string; // YYYY-MM-DD
+  nome: string;
+  tipo: "fixo" | "movel";
+}
+
+export class FeriadosResource {
+  constructor(private client: BaseClient) {}
+
+  /** Brazil's national holidays (fixed and moveable) for a given year,
+   * 1900 through 2199. */
+  list(ano: number): Promise<Holiday[]> {
+    return this.client.request("GET", `/api/v1/feriados/${ano}`);
+  }
+}
+
+export interface DiasUteisResult {
+  dias_uteis: string[];
+  total: number;
+}
+
+export interface DiasUteisOptions {
+  /** false counts only weekends as non-business days — national
+   * holidays count as business days. Default true. */
+  feriados?: boolean;
+}
+
+export class DiasUteisResource {
+  constructor(private client: BaseClient) {}
+
+  /** Every business day between dataInicial and dataFinal (both
+   * YYYY-MM-DD, inclusive), skipping weekends and, unless
+   * options.feriados is false, national holidays. Range capped at 10
+   * years by the API. */
+  count(dataInicial: string, dataFinal: string, options?: DiasUteisOptions): Promise<DiasUteisResult> {
+    const query: Record<string, string> = { data_inicial: dataInicial, data_final: dataFinal };
+    if (options?.feriados === false) query.feriados = "false";
+    return this.client.request("GET", "/api/v1/diasuteis", { query });
+  }
+}
+
+/** `meta.fonte` says which source answered ("open-library" or
+ * "brasilapi"). */
+export interface ISBNResult {
+  isbn: string;
+  titulo: string;
+  subtitulo?: string;
+  autores?: string[];
+  editora?: string;
+  ano_publicacao?: string;
+  paginas?: number;
+  capa_url?: string;
+  meta: { fonte: "open-library" | "brasilapi" };
+}
+
+export class ISBNResource {
+  constructor(private client: BaseClient) {}
+
+  /** Looks up a book's metadata by ISBN-10 or ISBN-13, with or without
+   * hyphens. */
+  get(isbn: string): Promise<ISBNResult> {
+    return this.client.request("GET", `/api/v1/isbn/${isbn}`);
+  }
+}
+
+export interface IBGERegiao {
+  id: number;
+  sigla: string;
+  nome: string;
+}
+
+export interface IBGEEstado {
+  id: number;
+  sigla: string;
+  nome: string;
+  regiao: IBGERegiao;
+}
+
+export interface IBGEMunicipio {
+  codigo_ibge: number;
+  nome: string;
+  uf: string;
+}
+
+export interface IBGECNAECategoria {
+  codigo: string;
+  descricao: string;
+}
+
+export interface IBGECNAEClasse {
+  codigo: string;
+  descricao: string;
+  grupo: IBGECNAECategoria;
+  divisao: IBGECNAECategoria;
+  secao: IBGECNAECategoria;
+}
+
+/** No fallback — the source is already the official one (IBGE). */
+export class IBGEResource {
+  constructor(private client: BaseClient) {}
+
+  /** Brazil's 5 macro-regions. */
+  regioes(): Promise<IBGERegiao[]> {
+    return this.client.request("GET", "/api/v1/ibge/regioes");
+  }
+
+  /** Every Brazilian state. */
+  estados(): Promise<IBGEEstado[]> {
+    return this.client.request("GET", "/api/v1/ibge/uf");
+  }
+
+  /** One state by sigla ("SP") or IBGE code ("35"). */
+  estado(codigo: string): Promise<IBGEEstado> {
+    return this.client.request("GET", `/api/v1/ibge/uf/${codigo}`);
+  }
+
+  /** Every municipality of a state (sigla, e.g. "SP"). */
+  municipios(uf: string): Promise<IBGEMunicipio[]> {
+    return this.client.request("GET", `/api/v1/ibge/municipios/${uf}`);
+  }
+
+  /** Every CNAE (business activity) class. */
+  cnaeClasses(): Promise<IBGECNAEClasse[]> {
+    return this.client.request("GET", "/api/v1/ibge/cnae");
+  }
+
+  /** One CNAE class by code (e.g. "01113"). */
+  cnae(codigo: string): Promise<IBGECNAEClasse> {
+    return this.client.request("GET", `/api/v1/ibge/cnae/${codigo}`);
+  }
+}
+
 /** Municipio (not "cidade") is the field name the API itself uses — the
  * query param on search()/neighborhoods() is called cidade, but the
  * response field isn't. */

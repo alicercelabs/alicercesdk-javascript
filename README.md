@@ -38,6 +38,12 @@ Uma propriedade por API, todas no mesmo client:
 |---|---|
 | `client.ip` | IP Intelligence — geo, ASN, cloud, VPN/Tor (`lookup`/`self`/`batch`) |
 | `client.cep` | Endereço a partir do CEP |
+| `client.cnpj` | Consulta de CNPJ (fonte local + fallback BrasilAPI) |
+| `client.cpf` | Validação de CPF e região fiscal |
+| `client.feriados` | Feriados nacionais por ano |
+| `client.diasUteis` | Contagem de dias úteis num intervalo |
+| `client.isbn` | Metadados de livro por ISBN |
+| `client.ibge` | Regiões, estados, municípios e classes CNAE |
 | `client.dns` | Consulta DNS |
 | `client.email` | Verificação de email |
 | `client.ssl` | Checagem de certificado |

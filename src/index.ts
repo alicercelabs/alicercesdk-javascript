@@ -9,10 +9,12 @@
  *   console.log(endereco.logradouro); // "Avenida Paulista"
  *
  * Every product API is available as a property on the client —
- * `client.ip`, `client.cep`, `client.dns`, `client.email`, `client.cron`,
- * `client.qrcode`, `client.ssl`, `client.kv`, `client.uptime`,
- * `client.imagem`, `client.maps`, `client.queue`, `client.templating`,
- * `client.edgedb`, `client.functions`, `client.trust` — plus account
+ * `client.ip`, `client.cep`, `client.cnpj`, `client.cpf`,
+ * `client.feriados`, `client.diasUteis`, `client.isbn`, `client.ibge`,
+ * `client.dns`, `client.email`, `client.cron`, `client.qrcode`,
+ * `client.ssl`, `client.kv`, `client.uptime`, `client.imagem`,
+ * `client.maps`, `client.queue`, `client.templating`, `client.edgedb`,
+ * `client.functions`, `client.trust` — plus account
  * management under `client.auth` (register/login/profile) and
  * `client.account` (API keys, usage analytics).
  *
@@ -21,7 +23,7 @@
  */
 
 import { BaseClient, ClientOptions, BinaryResponse } from "./client";
-import { IPResource, CEPResource, CNPJResource, DNSResource, EmailResource, SSLResource, MapsResource, TrustResource } from "./resources/lookups";
+import { IPResource, CEPResource, CNPJResource, CPFResource, FeriadosResource, DiasUteisResource, ISBNResource, IBGEResource, DNSResource, EmailResource, SSLResource, MapsResource, TrustResource } from "./resources/lookups";
 import { KVResource, QueueResource, EdgeDBResource } from "./resources/storage";
 import { CronResource, UpTimeResource } from "./resources/jobs";
 import { QRCodeResource, ImagemResource, TemplatingResource } from "./resources/media";
@@ -44,6 +46,11 @@ export class AlicerceLabs {
   readonly ip: IPResource;
   readonly cep: CEPResource;
   readonly cnpj: CNPJResource;
+  readonly cpf: CPFResource;
+  readonly feriados: FeriadosResource;
+  readonly diasUteis: DiasUteisResource;
+  readonly isbn: ISBNResource;
+  readonly ibge: IBGEResource;
   readonly dns: DNSResource;
   readonly email: EmailResource;
   readonly ssl: SSLResource;
@@ -72,6 +79,11 @@ export class AlicerceLabs {
     this.ip = new IPResource(this.client);
     this.cep = new CEPResource(this.client);
     this.cnpj = new CNPJResource(this.client);
+    this.cpf = new CPFResource(this.client);
+    this.feriados = new FeriadosResource(this.client);
+    this.diasUteis = new DiasUteisResource(this.client);
+    this.isbn = new ISBNResource(this.client);
+    this.ibge = new IBGEResource(this.client);
     this.dns = new DNSResource(this.client);
     this.email = new EmailResource(this.client);
     this.ssl = new SSLResource(this.client);

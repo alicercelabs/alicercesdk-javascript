@@ -57,7 +57,6 @@ export interface IPNetwork {
   isp: string | null;
   rir: string | null;
   type: "isp" | "hosting" | "business" | "education" | "government" | "banking" | "cdn" | "mobile" | "satellite" | "unknown";
-  anycast: boolean | null;
   cloud: IPCloud | null;
   rpki: IPRPKI | null;
 }
@@ -115,18 +114,6 @@ export interface IPTraits {
   bogon: boolean;
 }
 
-export interface IPCarrier {
-  name: string;
-  mcc: string;
-  mnc: string;
-  country_code: string;
-}
-
-export interface IPCompany {
-  name: string;
-  domain: string;
-  type: string;
-}
 
 export interface IPConfidenceSummary {
   country: IPConfidenceLevel;
@@ -157,8 +144,6 @@ export interface IPResult {
   network: IPNetwork | null;
   privacy: IPPrivacy;
   traits: IPTraits;
-  carrier: IPCarrier | null;
-  company: IPCompany | null;
 
   meta: IPMeta;
 }
